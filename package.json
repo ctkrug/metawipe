@@ -1,0 +1,32 @@
+{
+  "name": "metawipe",
+  "version": "0.1.0",
+  "description": "See every EXIF/GPS/device field a photo is leaking, then strip it — entirely in your browser.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Charlie Krug",
+  "homepage": "https://apps.charliekrug.com/metawipe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ctkrug/metawipe.git"
+  },
+  "keywords": [
+    "exif",
+    "metadata",
+    "privacy",
+    "gps",
+    "jpeg",
+    "client-side"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}
