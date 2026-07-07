@@ -30,6 +30,26 @@ describe('renderPanel', () => {
     expect(link.getAttribute('href')).toMatch(/openstreetmap\.org/);
   });
 
+  it('shows an altitude readout when the fix carries one', () => {
+    const meta = {
+      fields: [{ ifd: 'GPS', name: 'GPSLatitude', display: '…', sensitive: true }],
+      sensitiveCount: 1,
+      coordinates: { lat: 37.8, lng: -122.2, altitude: 84.3 },
+    };
+    renderPanel(host, meta, {});
+    expect(host.querySelector('.geo__alt').textContent).toMatch(/84\.3 m/);
+  });
+
+  it('omits the altitude readout when there is none', () => {
+    const meta = {
+      fields: [{ ifd: 'GPS', name: 'GPSLatitude', display: '…', sensitive: true }],
+      sensitiveCount: 1,
+      coordinates: { lat: 37.8, lng: -122.2, altitude: null },
+    };
+    renderPanel(host, meta, {});
+    expect(host.querySelector('.geo__alt')).toBeNull();
+  });
+
   it('renders a designed empty state and disabled wipe for a clean JPEG', () => {
     const meta = parseMetadata(jpegBare());
     renderPanel(host, meta, { onWipe: () => {}, onReset: () => {} });
