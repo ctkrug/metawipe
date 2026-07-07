@@ -15,6 +15,9 @@ const TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8 
  * @returns {{ reader: Reader, base: number, firstIFD: number } | null}
  */
 export function readTiffHeader(view, base) {
+  // The header is 8 bytes (order mark + magic + first-IFD offset); a segment
+  // truncated before it must yield null, not an out-of-bounds read.
+  if (base < 0 || base + 8 > view.byteLength) return null;
   const order = view.getUint16(base, false);
   let little;
   if (order === 0x4949) little = true; // "II"
