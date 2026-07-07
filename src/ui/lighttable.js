@@ -68,6 +68,8 @@ export function renderPlate(stage, objectUrl, fields, animate = true) {
       'div',
       {
         class: `pin${f.sensitive ? ' is-sensitive' : ''}`,
+        // The panel is the accessible source of truth; pins are a visual echo.
+        'aria-hidden': 'true',
         style: `left:${x}%; top:${y}%; animation-delay:${animate ? 120 + i * 70 : 0}ms`,
       },
       `${f.name}`,
