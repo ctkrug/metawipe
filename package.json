@@ -1,6 +1,6 @@
 {
   "name": "metawipe",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "See every EXIF/GPS/device field a photo is leaking, then strip it — entirely in your browser.",
   "type": "module",
   "license": "MIT",
