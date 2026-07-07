@@ -10,6 +10,7 @@ import {
   jpegWithForeignApp1,
   jpegAppMarkerAtEof,
   jpegExifNoTiff,
+  jpegBadSubIfdPointer,
 } from './fixtures.js';
 
 describe('parseMetadata', () => {
@@ -85,6 +86,14 @@ describe('parseMetadata', () => {
     }).not.toThrow();
     expect(meta.isJpeg).toBe(true);
     expect(meta.coordinates).toBeNull();
+  });
+
+  it('refuses a malformed sub-IFD pointer instead of following garbage', () => {
+    const meta = parseMetadata(jpegBadSubIfdPointer());
+    expect(meta.isJpeg).toBe(true);
+    // Only the (well-formed) IFD0 pointer entry itself; no phantom sub-IFD fields.
+    expect(meta.fields.every((f) => f.ifd === 'IFD0')).toBe(true);
+    expect(meta.fields.some((f) => /^0x/.test(f.name))).toBe(false);
   });
 
   it('does not throw when an APP marker sits at the very end of the file', () => {

@@ -214,6 +214,28 @@ export function notJpeg() {
 }
 
 /**
+ * A JPEG whose EXIF IFD0 declares an ExifIFDPointer with count 2 — a malformed
+ * pointer (a real sub-IFD pointer is a single LONG). Following it as an offset
+ * would read a garbage location; the parser should refuse and surface nothing.
+ */
+export function jpegBadSubIfdPointer() {
+  const tiff = [
+    ...ascii('MM'), ...u16(0x002a), ...u32(8), // big-endian, IFD0 at 8
+    ...u16(1), // one entry
+    ...u16(0x8769), ...u16(4), ...u32(2), ...u32(8), // ExifIFDPointer, count=2 (bad)
+    ...u32(0), // next IFD
+  ];
+  const payload = [...ascii('Exif\0\0'), ...tiff];
+  const bytes = [
+    ...u16(0xffd8),
+    0xff, 0xe1, ...u16(payload.length + 2), ...payload,
+    0xff, 0xda, ...u16(4), 0x00, 0x00, 0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
+/**
  * A JPEG whose APP1 segment header (marker + length) sits right at the end of
  * the buffer, with no room for the signature bytes the walker tries to match.
  * A naive matcher reads past the buffer end and throws.
