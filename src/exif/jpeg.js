@@ -15,6 +15,9 @@ const XMP_SIG = 'http://ns.adobe.com/xap/1.0/\0';
 const IPTC_SIG = 'Photoshop 3.0\0';
 
 function sigAt(view, offset, sig) {
+  // A marker near EOF may not have room for the full signature — treat an
+  // out-of-range read as a non-match rather than letting getUint8 throw.
+  if (offset + sig.length > view.byteLength) return false;
   for (let i = 0; i < sig.length; i++) {
     if (view.getUint8(offset + i) !== sig.charCodeAt(i)) return false;
   }
