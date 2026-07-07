@@ -13,9 +13,9 @@ export default defineConfig({
     include: ['test/**/*.test.js'],
     coverage: {
       provider: 'v8',
-      // main.js is the DOM bootstrap (exercised only in a browser); the units
-      // below are the testable core, so scope the reported number to them.
-      include: ['src/exif/**', 'src/ui/**', 'src/util/**'],
+      // All of src is now under test (main.js via the createApp factory); the
+      // only unhit line is the browser boot guard, which needs a real #app root.
+      include: ['src/**'],
     },
   },
 });
