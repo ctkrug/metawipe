@@ -95,6 +95,37 @@ describe('createApp flow', () => {
     expect(root.querySelector('.field-row.is-sensitive')).toBeTruthy();
   });
 
+  it('highlights on drag and loads a JPEG dropped on the light-table', async () => {
+    const app = createApp(root);
+    const { table } = app;
+
+    table.dispatchEvent(new Event('dragenter', { bubbles: true }));
+    expect(table.classList.contains('is-drag')).toBe(true);
+
+    const leave = new Event('dragleave', { bubbles: true });
+    leave.relatedTarget = null; // left the table entirely
+    table.dispatchEvent(leave);
+    expect(table.classList.contains('is-drag')).toBe(false);
+
+    const drop = new Event('drop', { bubbles: true });
+    drop.dataTransfer = { files: [jpegFile('dropped.jpg', jpegWithExif())] };
+    table.dispatchEvent(drop);
+    expect(table.classList.contains('is-drag')).toBe(false);
+
+    await new Promise((r) => setTimeout(r)); // let the async load settle
+    expect(root.querySelector('.plate img')).toBeTruthy();
+    expect(root.textContent).toContain('GPS');
+  });
+
+  it('ignores a drop that carries no file', () => {
+    const app = createApp(root);
+    const drop = new Event('drop', { bubbles: true });
+    drop.dataTransfer = { files: [] };
+    app.table.dispatchEvent(drop);
+    // Still on the dropzone — nothing loaded.
+    expect(root.querySelector('.dropzone')).toBeTruthy();
+  });
+
   it('discards an in-flight load that resolves after a reset', async () => {
     const app = createApp(root);
     const pending = deferredJpeg('slow.jpg', jpegWithExif());
