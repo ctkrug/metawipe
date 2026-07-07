@@ -8,6 +8,9 @@ import {
   notJpeg,
   jpegWithXmp,
   jpegWithIptc,
+  jpegWithAllMeta,
+  jpegWithJfif,
+  jpegTruncated,
 } from './fixtures.js';
 
 describe('stripMetadata', () => {
@@ -65,5 +68,32 @@ describe('stripMetadata', () => {
     const original = jpegWithExif();
     const { buffer } = stripMetadata(original);
     expect(parseMetadata(buffer).fields.length).toBe(0);
+  });
+
+  it('removes all three blocks from a multi-segment photo at once', () => {
+    const { buffer, removed } = stripMetadata(jpegWithAllMeta());
+    expect(removed).toBe(3); // EXIF + XMP + IPTC
+    expect(parseMetadata(buffer).hasMetadata).toBe(false);
+  });
+
+  it('removes a JFIF APP0 header', () => {
+    const { buffer, removed } = stripMetadata(jpegWithJfif());
+    expect(removed).toBe(1);
+    expect(parseMetadata(buffer).hasMetadata).toBe(false);
+  });
+
+  it('is idempotent — stripping a clean file again is a no-op', () => {
+    const once = stripMetadata(jpegWithExif()).buffer;
+    const twice = stripMetadata(once);
+    expect(twice.removed).toBe(0);
+    expect(twice.buffer).toBe(once);
+  });
+
+  it('does not throw on a truncated JPEG and keeps a valid SOI', () => {
+    let out;
+    expect(() => {
+      out = stripMetadata(jpegTruncated());
+    }).not.toThrow();
+    expect(new DataView(out.buffer).getUint16(0, false)).toBe(0xffd8);
   });
 });
