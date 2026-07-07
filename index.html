@@ -43,6 +43,48 @@
       <!-- The light-table (hero) + the leak panel are injected by main.js -->
     </main>
 
+    <!-- How it works — the landing explainer. Same tokens as the tool above;
+         product and page are one brand. -->
+    <section class="explainer" aria-labelledby="how-heading">
+      <h2 id="how-heading" class="explainer__title">Three steps. Zero uploads.</h2>
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">01</span>
+          <h3 class="step__head">Drop a photo</h3>
+          <p>
+            Drag a JPEG onto the light-table, or browse for one. It's read with
+            <code>FileReader</code> — the bytes never leave this tab. Pull your
+            network cable; it still works.
+          </p>
+        </li>
+        <li class="step">
+          <span class="step__num">02</span>
+          <h3 class="step__head">See the leak</h3>
+          <p>
+            A from-scratch EXIF/TIFF/GPS parser surfaces every hidden field,
+            pinned on the image. Location and identity leaks glow
+            <span class="hl-warn">amber</span> — including a map link to the exact
+            spot your photo pins.
+          </p>
+        </li>
+        <li class="step">
+          <span class="step__num">03</span>
+          <h3 class="step__head">Wipe it, losslessly</h3>
+          <p>
+            One click drops the metadata segments and hands back a clean JPEG.
+            The compressed pixels are copied byte-for-byte — no re-encode, no
+            quality loss, just the photo minus its dossier.
+          </p>
+        </li>
+      </ol>
+      <p class="promise">
+        Every "remove EXIF online" site asks you to <em>upload</em> the exact
+        coordinates you're trying to hide. Metawipe never does. Parsing and
+        stripping happen entirely on your device — open the network tab and
+        watch it stay silent.
+      </p>
+    </section>
+
     <footer class="footer">
       <p>
         Metadata is parsed and stripped entirely on your device. Open the network
