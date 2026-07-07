@@ -21,18 +21,24 @@ photo whose location you're trying to hide. That's backwards. A privacy tool
 that sees your data isn't a privacy tool. Metawipe proves you don't need a
 server at all: modern browsers can read and rewrite image containers directly.
 
-## Features (planned)
+## Features
 
 - **Leak overlay** — every metadata field pinned over the image, GPS and personal
   fields flagged in a warning color so the risk is obvious at a glance.
-- **Real parser** — a from-scratch reader for JPEG APP segments, TIFF/EXIF IFDs,
-  GPS IFD, and XMP packets. Not a wrapper around a black box.
+- **Real parser** — a from-scratch, endian-aware reader for JPEG APP segments,
+  TIFF/EXIF IFDs and the GPS IFD, plus XMP and IPTC block detection. Not a
+  wrapper around a black box.
 - **Interactive map pin** — if the photo carries coordinates, see the actual spot
-  it claims you were standing.
-- **One-click strip** — a safe binary rewrite that removes metadata segments while
-  leaving the image data byte-for-byte intact, then downloads the clean file.
+  it claims you were standing, with altitude when present.
+- **One-click strip** — a lossless binary rewrite that removes metadata segments
+  while leaving the compressed image data byte-for-byte intact, then downloads
+  the clean file (`*-clean.jpg`).
+- **Honest counter** — everything the report shows is exactly what the wipe
+  removes; a photo carrying only XMP or IPTC still reads as leaking, never
+  "clean".
 - **Fully offline** — works with your network disconnected; nothing is ever sent.
-- **Zero install** — a single static page, hostable anywhere.
+  A test audits the source so no egress call can slip in.
+- **Zero install** — a single static page, hostable under any subpath.
 
 ## Stack
 
