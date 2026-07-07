@@ -34,7 +34,7 @@ File  ──▶ main.js (intake)
             ├── exif/tags.js   tag id -> name + sensitivity
             └── exif/gps.js    DMS rationals + ref -> signed decimal
             ▼
-        { isJpeg, fields[], coordinates, segments, hasMetadata, sensitiveCount }
+        { isJpeg, fields[], coordinates, hasMetadata, sensitiveCount }
             │
             ├──▶ ui/lighttable.js  renderPlate() — image + scan sweep + pins
             └──▶ ui/panel.js       renderPanel() — counter, grouped fields, map link, Wipe CTA
