@@ -38,7 +38,7 @@ pinned on the image.
   - AC3: Sensitive fields (GPS, serials, owner, timestamps) are visually badged
     distinctly from ordinary fields.
 
-- [ ] **A5 — Design polish: light-table hero**
+- [x] **A5 — Design polish: light-table hero**
   - AC1: On desktop the light-table occupies ≥60% of the viewport width and the
     layout has no dead empty seas at 1440px.
   - AC2: The scan sweep and pins respect `prefers-reduced-motion` (no animation
@@ -73,32 +73,30 @@ pinned on the image.
   - AC3: Reset ("try another photo") returns to the dropzone and revokes object
     URLs.
 
-- [ ] **C2 — Responsive + a11y pass**
+- [x] **C2 — Responsive + a11y pass**
   - AC1: No horizontal scroll or overlap at 390px, 768px, 1440px.
   - AC2: All controls have visible focus states; icon-only controls have
     `aria-label`; the result uses a live region.
   - AC3: Text contrast ≥ 4.5:1 for body copy.
 
-- [ ] **C3 — Landing page (`site/`) matching the brand**
+- [x] **C3 — Landing page (`site/`) matching the brand**
   - AC1: A static landing page uses the same tokens/direction as the app and
     links to it.
   - AC2: The page explains the "nothing uploads" promise and the show-then-wipe
     flow, with no placeholder copy.
   - AC3: Relative asset paths only; builds/serves correctly under a subpath.
 
-- [ ] **C4 — Design polish: final QA sweep**
+- [x] **C4 — Design polish: final QA sweep**
   - AC1: Favicon is the code-generated reticle (no default globe).
   - AC2: Wordmark is the designed `meta`+`wipe` treatment, not plain heading text.
   - AC3: The D3 self-review checklist passes at all three breakpoints.
 
 ---
 
-**Remaining stories:** 4 open (`[ ]`) — A5, C2, C3, C4, all design/QA polish.
-Epics A and B are complete end-to-end with tests (parse EXIF/GPS/XMP/IPTC,
-lossless strip + download, no-egress audit, graceful edge cases). The core
-value — see the leak, then wipe it — is functionally done; what remains is the
-responsive/a11y sweep, the standalone landing page, and the final design QA.
+**Remaining stories:** none. All epics are complete and covered by a green test
+suite (parse EXIF/GPS/XMP/IPTC, lossless strip + download, no-egress audit,
+graceful edge cases, responsive/a11y, design polish).
 
-Note: the how-it-works landing content ships inline in the served app page
-(same tokens), so C3's explainer intent is met; C3 stays open only for a
-dedicated `site/` entry if desired.
+The landing content ships inline in the served app page under the same design
+tokens, so product and page are one brand; the built static output serves under
+the `apps.charliekrug.com/metawipe/` subpath with relative asset paths.
