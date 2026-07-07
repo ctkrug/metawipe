@@ -59,7 +59,7 @@ export function createApp(app) {
       meta = parseMetadata(buffer);
     } catch {
       if (seq !== loadSeq) return; // superseded — let the newer load own the UI
-      showError('That file couldn’t be read — it may be truncated or corrupt. Try another photo.');
+      showError('That file couldn’t be read. It may be truncated or corrupt. Try another photo.');
       return;
     }
     if (seq !== loadSeq) return; // a newer drop landed while we were decoding

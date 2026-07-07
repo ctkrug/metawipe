@@ -23,7 +23,7 @@ export function renderDropzone(stage, onBrowse) {
     el('div', { class: 'dropzone__reticle', html: RETICLE }),
     el('h2', { text: 'Drop a photo. Nothing leaves this tab.' }),
     el('p', {
-      text: 'Metawipe reads every EXIF, GPS and device field a JPEG is carrying, right here in your browser — then strips it on your command.',
+      text: 'Metawipe reads every EXIF, GPS and device field a JPEG is carrying, right here in your browser, then strips it on your command.',
     }),
     el(
       'button',
