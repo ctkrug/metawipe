@@ -74,7 +74,10 @@ export function renderPlate(stage, objectUrl, fields, animate = true) {
       },
       `${f.name}`,
     );
-    if (!animate) pin.style.animation = 'none', (pin.style.opacity = '1');
+    if (!animate) {
+      pin.style.animation = 'none';
+      pin.style.opacity = '1';
+    }
     frame.appendChild(pin);
   });
 
