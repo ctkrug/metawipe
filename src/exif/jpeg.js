@@ -55,7 +55,11 @@ export function walkSegments(view) {
     // Start of scan: compressed image data follows, stop scanning.
     if (marker === 0xda) break;
 
-    const segLen = view.getUint16(offset + 2, false); // includes the 2 length bytes
+    const declaredLen = view.getUint16(offset + 2, false); // includes the 2 length bytes
+    // A truncated or malformed file can declare a segment that runs past EOF.
+    // Clamp to what's actually present so byte counts stay honest and a later
+    // strip never computes a cut beyond the buffer.
+    const segLen = Math.min(declaredLen, len - offset - 2);
     const dataStart = offset + 4;
 
     let kind = 'other';
