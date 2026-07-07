@@ -22,6 +22,16 @@ describe('parseMetadata', () => {
     expect(meta.coordinates.lng).toBeCloseTo(-122.2708, 3);
   });
 
+  it('parses a little-endian ("II") TIFF stream identically to big-endian', () => {
+    const be = parseMetadata(jpegWithExif({ little: false }));
+    const le = parseMetadata(jpegWithExif({ little: true }));
+    expect(le.fields.find((f) => f.name === 'Make').display).toBe('TestCam');
+    expect(le.fields.find((f) => f.name === 'Model').display).toBe('M1');
+    // Coordinates must come out the same regardless of byte order.
+    expect(le.coordinates.lat).toBeCloseTo(be.coordinates.lat, 6);
+    expect(le.coordinates.lng).toBeCloseTo(be.coordinates.lng, 6);
+  });
+
   it('flags location and identity fields as sensitive', () => {
     const meta = parseMetadata(jpegWithExif());
     const lat = meta.fields.find((f) => f.name === 'GPSLatitude');
