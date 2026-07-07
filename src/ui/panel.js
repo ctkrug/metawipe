@@ -40,7 +40,7 @@ function geoBlock(coords) {
  * Render the leak panel.
  * @param {HTMLElement} host
  * @param {object} meta   parseMetadata result
- * @param {object} handlers  { onWipe, result, cleanUrl, cleanName }
+ * @param {object} handlers  { onWipe, onReset, result, cleanUrl, cleanName }
  */
 export function renderPanel(host, meta, handlers = {}) {
   const total = meta.fields.length;
@@ -101,6 +101,17 @@ export function renderPanel(host, meta, handlers = {}) {
       total === 0 ? 'Nothing to wipe' : `Wipe ${total} metadata field${total === 1 ? '' : 's'}`,
     );
     foot.appendChild(wipe);
+  }
+
+  // A way back to the dropzone from any loaded state (loaded or wiped).
+  if (handlers.onReset) {
+    foot.appendChild(
+      el(
+        'button',
+        { class: 'btn btn--ghost btn--full', onclick: handlers.onReset },
+        '↺ Inspect another photo',
+      ),
+    );
   }
 
   const panel = el('aside', { class: 'panel', 'aria-label': 'Metadata leak report' }, [

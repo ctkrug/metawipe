@@ -7,6 +7,7 @@ import { stripMetadata } from './exif/strip.js';
 import { renderDropzone, renderPlate } from './ui/lighttable.js';
 import { renderPanel } from './ui/panel.js';
 import { el, mount } from './ui/dom.js';
+import { cleanFilename } from './util/filename.js';
 
 const app = document.getElementById('app');
 
@@ -52,6 +53,7 @@ async function handleFile(file) {
   renderPlate(table, currentUrl, meta.fields, true);
   renderPanel(panelHost, meta, {
     onWipe: () => wipe(buffer, meta),
+    onReset: reset,
   });
 }
 
@@ -67,11 +69,8 @@ function wipe(buffer, meta) {
     result: `✓ Wiped ${removed} segment${removed === 1 ? '' : 's'} · ${kb} KB of hidden data removed.`,
     cleanUrl,
     cleanName: cleanFilename(currentName),
+    onReset: reset,
   });
-}
-
-function cleanFilename(name) {
-  return name.replace(/(\.jpe?g)$/i, '-clean$1').replace(/^([^.]+)$/, '$1-clean.jpg');
 }
 
 function showError(message) {
