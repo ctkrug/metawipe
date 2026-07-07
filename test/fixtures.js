@@ -163,7 +163,7 @@ export function jpegWithXmp() {
 
 /** A JPEG whose only metadata is an IPTC block (APP13, Photoshop signature). */
 export function jpegWithIptc() {
-  const iptc = ascii('Photoshop 3.0\08BIM\x04\x04creator: J. Doe');
+  const iptc = ascii('Photoshop 3.0\x008BIM\x04\x04creator: J. Doe');
   const bytes = [
     ...u16(0xffd8),
     ...appSegment(0xed, iptc),
