@@ -99,20 +99,31 @@ function parseExif(view, exifSeg, push, result) {
   push('IFD0', nameEntries(ifd0, TIFF_TAGS).list);
 
   // EXIF sub-IFD.
-  const exifPtr = ifd0[0x8769];
-  if (exifPtr) {
-    const exif = readIFD(reader, base, base + exifPtr.value);
+  const exifPtr = subIfdOffset(ifd0[0x8769]);
+  if (exifPtr != null) {
+    const exif = readIFD(reader, base, base + exifPtr);
     push('EXIF', nameEntries(exif, EXIF_TAGS).list);
   }
 
   // GPS sub-IFD -> coordinate fix.
-  const gpsPtr = ifd0[0x8825];
-  if (gpsPtr) {
-    const gpsIfd = readIFD(reader, base, base + gpsPtr.value);
+  const gpsPtr = subIfdOffset(ifd0[0x8825]);
+  if (gpsPtr != null) {
+    const gpsIfd = readIFD(reader, base, base + gpsPtr);
     const gpsNamed = nameEntries(gpsIfd, GPS_TAGS);
     push('GPS', gpsNamed.list);
     result.coordinates = extractCoordinates(gpsNamed.named);
   }
+}
+
+/**
+ * A sub-IFD pointer is a single LONG offset. Reject anything else (a malformed
+ * count>1 pointer resolves to an array; a negative would read backwards) so we
+ * never chase a garbage location and surface phantom fields.
+ */
+function subIfdOffset(entry) {
+  if (!entry) return null;
+  const v = entry.value;
+  return typeof v === 'number' && Number.isInteger(v) && v > 0 ? v : null;
 }
 
 /** A synthetic field describing a detected metadata block by its size. */
