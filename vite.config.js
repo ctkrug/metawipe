@@ -11,5 +11,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['test/**/*.test.js'],
+    coverage: {
+      provider: 'v8',
+      // main.js is the DOM bootstrap (exercised only in a browser); the units
+      // below are the testable core, so scope the reported number to them.
+      include: ['src/exif/**', 'src/ui/**', 'src/util/**'],
+    },
   },
 });
