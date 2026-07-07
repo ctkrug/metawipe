@@ -382,8 +382,13 @@ body {
   display: block;
   margin-bottom: 4px;
 }
+.geo__alt {
+  color: var(--muted);
+}
 .geo a {
   color: var(--accent);
+  display: inline-block;
+  margin-top: 6px;
 }
 
 /* --- buttons --- */
