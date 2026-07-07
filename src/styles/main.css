@@ -451,6 +451,106 @@ body {
   font-size: 12px;
 }
 
+/* --- how-it-works explainer (landing) --- */
+.explainer {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  width: 100%;
+  margin: 8px auto 0;
+  padding: 48px 24px 8px;
+}
+.explainer__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 31px;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 0 32px;
+}
+.steps {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  counter-reset: step;
+}
+@media (min-width: 760px) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+.step {
+  position: relative;
+  padding: 24px 20px 20px;
+  border-radius: var(--r-panel);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-1), var(--bg) 140%);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 160ms ease-out, border-color 160ms ease-out;
+}
+.step::after {
+  /* a faint blueprint corner tick — the technical signature detail */
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid var(--accent);
+  border-right: 1px solid var(--accent);
+  opacity: 0.4;
+}
+.step:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-deep);
+}
+.step__num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+.step__head {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  margin: 8px 0 8px;
+}
+.step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.step code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.hl-warn {
+  color: var(--warn);
+  font-weight: 600;
+}
+.promise {
+  max-width: 68ch;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--text);
+  font-size: 15px;
+}
+.promise em {
+  color: var(--warn);
+  font-style: normal;
+  font-weight: 600;
+}
+
 /* --- footer --- */
 .footer {
   padding: 20px 24px 32px;
