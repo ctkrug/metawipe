@@ -139,6 +139,64 @@ export function jpegWithExif({ little = false } = {}) {
   return new Uint8Array(bytes).buffer;
 }
 
+/** Wrap a payload (with its own signature) in an APPn segment. */
+function appSegment(marker, payload) {
+  const segLen = payload.length + 2;
+  return [0xff, marker, ...u16(segLen), ...payload];
+}
+
+/** A JPEG whose only metadata is an XMP packet (APP1, Adobe signature). */
+export function jpegWithXmp() {
+  const xmp = ascii(
+    'http://ns.adobe.com/xap/1.0/\0<x:xmpmeta><rdf:Description ' +
+      'photoshop:City="Portland"/></x:xmpmeta>',
+  );
+  const bytes = [
+    ...u16(0xffd8),
+    ...appSegment(0xe1, xmp),
+    0xff, 0xda, ...u16(4), 0x00, 0x00,
+    0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
+/** A JPEG whose only metadata is an IPTC block (APP13, Photoshop signature). */
+export function jpegWithIptc() {
+  const iptc = ascii('Photoshop 3.0\08BIM\x04\x04creator: J. Doe');
+  const bytes = [
+    ...u16(0xffd8),
+    ...appSegment(0xed, iptc),
+    0xff, 0xda, ...u16(4), 0x00, 0x00,
+    0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
+/**
+ * A JPEG truncated mid-EXIF-segment: the APP1 length says the segment runs
+ * past the end of the file. A robust walker must not read out of bounds.
+ */
+export function jpegTruncated() {
+  const full = new Uint8Array(jpegWithExif());
+  // Keep SOI + the APP1 header/length but drop the tail of the buffer.
+  return full.slice(0, full.length - 20).buffer;
+}
+
+/** A non-EXIF APP1 segment (unknown signature) followed by a normal scan. */
+export function jpegWithForeignApp1() {
+  const junk = ascii('SomethingElse\0not exif at all');
+  const bytes = [
+    ...u16(0xffd8),
+    ...appSegment(0xe1, junk),
+    0xff, 0xda, ...u16(4), 0x00, 0x00,
+    0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
 /** A JPEG with no metadata segments at all. */
 export function jpegBare() {
   const bytes = [
