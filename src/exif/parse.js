@@ -71,14 +71,18 @@ export function parseMetadata(buffer) {
   const exifSeg = segments.find((s) => s.kind === 'exif');
   if (exifSeg) parseExif(view, exifSeg, push, result);
 
-  // XMP / IPTC aren't field-decoded (that's beyond v1), but their presence is
-  // real leaked metadata — surface each as a flagged block so the counter and
-  // the panel stay honest and consistent with the stripper.
+  // XMP / IPTC / foreign application segments aren't field-decoded (beyond v1),
+  // but their presence is real embedded data the stripper WILL remove — surface
+  // each as a block so the counter and panel stay consistent with `strip` and
+  // never under-report what wiping deletes. XMP/IPTC routinely carry identity
+  // and location so they're flagged; an unknown APPn is listed but not alarmed.
   for (const seg of segments) {
     if (seg.kind === 'xmp') {
       push('XMP', [xmpField(seg)]);
     } else if (seg.kind === 'iptc') {
       push('IPTC', [iptcField(seg)]);
+    } else if (seg.kind === 'app1' || seg.kind === 'appn') {
+      push('APPn', [appField(seg)]);
     }
   }
 
@@ -140,3 +144,15 @@ function blockField(name, seg) {
 
 const xmpField = (seg) => blockField('XMP packet', seg);
 const iptcField = (seg) => blockField('IPTC record', seg);
+
+/**
+ * A generic block for an unknown application segment (a vendor APPn that isn't
+ * EXIF/XMP/IPTC). Listed because `strip` removes it, but not flagged as a leak:
+ * it may be a benign ICC profile or JFIF header, not identity/location.
+ */
+function appField(seg) {
+  const n = seg.marker & 0x0f; // 0xE0..0xEF -> APP0..APP15
+  const f = blockField(`APP${n} segment`, seg);
+  f.sensitive = false;
+  return f;
+}

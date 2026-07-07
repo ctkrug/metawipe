@@ -4,7 +4,7 @@
 import { el, mount } from './dom.js';
 import { formatCoord } from '../exif/gps.js';
 
-const IFD_ORDER = ['IFD0', 'EXIF', 'GPS', 'XMP', 'IPTC'];
+const IFD_ORDER = ['IFD0', 'EXIF', 'GPS', 'XMP', 'IPTC', 'APPn'];
 
 /** Group parsed fields by their IFD, in a stable display order. */
 function groupByIfd(fields) {

@@ -102,7 +102,8 @@ describe('parseMetadata', () => {
       meta = parseMetadata(jpegAppMarkerAtEof());
     }).not.toThrow();
     expect(meta.isJpeg).toBe(true);
-    expect(meta.hasMetadata).toBe(false);
+    // A truncated trailing segment carries no real payload and is never a leak.
+    expect(meta.sensitiveCount).toBe(0);
   });
 
   it('does not throw when EXIF is truncated before its TIFF header', () => {
@@ -114,10 +115,16 @@ describe('parseMetadata', () => {
     expect(meta.coordinates).toBeNull();
   });
 
-  it('ignores a non-EXIF APP1 segment without surfacing bogus fields', () => {
+  it('surfaces a non-EXIF APP1 segment as an unflagged application block', () => {
+    // strip removes any APPn segment, so parse must list it (consistency) — but
+    // an unknown vendor segment isn't decoded into fields or flagged as a leak.
     const meta = parseMetadata(jpegWithForeignApp1());
     expect(meta.isJpeg).toBe(true);
-    expect(meta.hasMetadata).toBe(false);
+    expect(meta.hasMetadata).toBe(true);
+    const app = meta.fields.find((f) => f.ifd === 'APPn');
+    expect(app).toBeTruthy();
+    expect(app.sensitive).toBe(false);
+    expect(meta.sensitiveCount).toBe(0);
   });
 });
 
