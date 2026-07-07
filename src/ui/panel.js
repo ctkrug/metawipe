@@ -47,9 +47,16 @@ export function renderPanel(host, meta, handlers = {}) {
   const leaks = meta.sensitiveCount;
 
   const head = el('div', { class: 'panel__head' }, [
-    el('div', { class: 'panel__count', html: `${total} <span class="leaks">${leaks}</span>` }),
+    el('div', {
+      class: 'panel__count',
+      'aria-hidden': 'true',
+      html: `${total} <span class="leaks">${leaks}</span>`,
+    }),
     el('p', {
       class: 'panel__sub',
+      // Announce the tally to screen readers when a photo is analyzed.
+      role: 'status',
+      'aria-live': 'polite',
       text: `${total} field${total === 1 ? '' : 's'} found · ${leaks} leaking identity or location`,
     }),
   ]);
