@@ -7,6 +7,10 @@
 // in the wild while keeping the repo asset-free.
 
 // --- tiny endian writers -------------------------------------------------
+//
+// JPEG structural fields (segment lengths, markers) are ALWAYS big-endian, so
+// the module-level u16/u32 stay big-endian. TIFF-internal fields follow the
+// stream's byte-order mark, so buildExifTiff selects a writer set per `little`.
 
 function u16(n) {
   return [(n >> 8) & 0xff, n & 0xff];
@@ -14,13 +18,14 @@ function u16(n) {
 function u32(n) {
   return [(n >> 24) & 0xff, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
+function le16(n) {
+  return [n & 0xff, (n >> 8) & 0xff];
+}
+function le32(n) {
+  return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >> 24) & 0xff];
+}
 function ascii(str) {
   return Array.from(str).map((c) => c.charCodeAt(0));
-}
-
-// A rational as two u32s (big-endian).
-function rational(num, den) {
-  return [...u32(num), ...u32(den)];
 }
 
 // --- TIFF/EXIF construction ---------------------------------------------
@@ -28,10 +33,16 @@ function rational(num, den) {
 /**
  * Build a TIFF (EXIF) byte array with camera + GPS fields.
  * Offsets are computed relative to the TIFF header start (base 0).
+ * @param {boolean} little  emit a little-endian ("II") stream when true.
  */
-function buildExifTiff() {
+function buildExifTiff(little = false) {
+  const w16 = little ? le16 : u16;
+  const w32 = little ? le32 : u32;
+  // A rational is two u32s in the stream's byte order.
+  const rational = (num, den) => [...w32(num), ...w32(den)];
+  const bom = little ? ascii('II') : ascii('MM');
   // We assemble three IFDs and a shared data pool, then patch pointer offsets.
-  const header = [...ascii('MM'), ...u16(0x002a), ...u32(8)]; // -> IFD0 at 8
+  const header = [...bom, ...w16(0x002a), ...w32(8)]; // -> IFD0 at 8
 
   // Data pool holds >4-byte values (strings, rationals). We reserve space for
   // it after all three IFDs and record each blob's absolute offset.
@@ -74,34 +85,34 @@ function buildExifTiff() {
   const entry = (tag, type, count, valueBytes) => {
     const v = valueBytes.slice(0, 4);
     while (v.length < 4) v.push(0);
-    return [...u16(tag), ...u16(type), ...u32(count), ...v];
+    return [...w16(tag), ...w16(type), ...w32(count), ...v];
   };
 
   // --- IFD0 ---
   const ifd0 = [
-    ...u16(ifd0Entries),
-    ...entry(0x010f, 2, makeBlob.bytes.length, u32(makeBlob.offset)), // Make -> ptr
+    ...w16(ifd0Entries),
+    ...entry(0x010f, 2, makeBlob.bytes.length, w32(makeBlob.offset)), // Make -> ptr
     ...entry(0x0110, 2, 3, ascii('M1\0')), // Model inline
-    ...entry(0x8769, 4, 1, u32(exifStart)), // ExifIFDPointer
-    ...entry(0x8825, 4, 1, u32(gpsStart)), // GPSInfoIFDPointer
-    ...u32(0), // next IFD
+    ...entry(0x8769, 4, 1, w32(exifStart)), // ExifIFDPointer
+    ...entry(0x8825, 4, 1, w32(gpsStart)), // GPSInfoIFDPointer
+    ...w32(0), // next IFD
   ];
 
   // --- EXIF IFD ---
   const exif = [
-    ...u16(exifEntries),
+    ...w16(exifEntries),
     ...entry(0x9003, 2, 4, ascii('X\0\0\0')), // DateTimeOriginal (short inline stub)
-    ...u32(0),
+    ...w32(0),
   ];
 
   // --- GPS IFD ---
   const gps = [
-    ...u16(gpsEntries),
+    ...w16(gpsEntries),
     ...entry(0x0001, 2, 2, ascii('N\0')), // GPSLatitudeRef
-    ...entry(0x0002, 5, 3, u32(gpsLatBlob.offset)), // GPSLatitude -> ptr
+    ...entry(0x0002, 5, 3, w32(gpsLatBlob.offset)), // GPSLatitude -> ptr
     ...entry(0x0003, 2, 2, ascii('W\0')), // GPSLongitudeRef
-    ...entry(0x0004, 5, 3, u32(gpsLngBlob.offset)), // GPSLongitude -> ptr
-    ...u32(0),
+    ...entry(0x0004, 5, 3, w32(gpsLngBlob.offset)), // GPSLongitude -> ptr
+    ...w32(0),
   ];
 
   for (const b of blobs) pool.push(...b.bytes);
@@ -109,9 +120,12 @@ function buildExifTiff() {
   return [...header, ...ifd0, ...exif, ...gps, ...pool];
 }
 
-/** A full JPEG (SOI + APP1/EXIF + a 1-segment scan + EOI) as an ArrayBuffer. */
-export function jpegWithExif() {
-  const tiff = buildExifTiff();
+/**
+ * A full JPEG (SOI + APP1/EXIF + a 1-segment scan + EOI) as an ArrayBuffer.
+ * @param {{ little?: boolean }} [opts]  build a little-endian ("II") TIFF stream.
+ */
+export function jpegWithExif({ little = false } = {}) {
+  const tiff = buildExifTiff(little);
   const payload = [...ascii('Exif\0\0'), ...tiff];
   const segLen = payload.length + 2; // + the 2 length bytes
 
