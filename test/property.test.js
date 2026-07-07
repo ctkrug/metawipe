@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { dmsToDecimal, extractCoordinates, formatCoord } from '../src/exif/gps.js';
-import { formatValue } from '../src/exif/parse.js';
+import { formatValue, parseMetadata } from '../src/exif/parse.js';
+import { stripMetadata } from '../src/exif/strip.js';
 
 // Property-based tests: assert invariants across the whole input space rather
 // than a handful of hand-picked examples. These catch sign/precision/rounding
@@ -71,6 +72,49 @@ describe('extractCoordinates properties', () => {
         expect(Number(formatCoord(fix.lat))).toBeCloseTo(fix.lat, 5);
         expect(fix.altitude).toBeNull();
       }),
+    );
+  });
+});
+
+// --- JPEG composition for the strip invariant --------------------------------
+
+const be16 = (n) => [(n >> 8) & 0xff, n & 0xff];
+const app = (marker, payload) => [0xff, marker, ...be16(payload.length + 2), ...payload];
+const ascii = (s) => Array.from(s).map((c) => c.charCodeAt(0));
+
+// A menu of metadata segments the stripper must remove.
+const META_SEGMENTS = {
+  xmp: () => app(0xe1, ascii('http://ns.adobe.com/xap/1.0/\0<x:xmpmeta/>')),
+  iptc: () => app(0xed, ascii('Photoshop 3.0\0creator: A. Nonymous')),
+  app1: () => app(0xe1, ascii('SomeVendor\0proprietary junk')),
+  appn: () => app(0xe4, ascii('APP4 payload')),
+};
+
+describe('parse<->strip invariant', () => {
+  it('wipes every metadata combination and preserves the scan bytes', () => {
+    fc.assert(
+      fc.property(
+        // Which metadata segments to include, in which order.
+        fc.subarray(Object.keys(META_SEGMENTS), { minLength: 1 }),
+        fc.array(fc.integer({ min: 0, max: 254 }), { minLength: 1, maxLength: 40 }),
+        (kinds, scanBytes) => {
+          const segments = kinds.flatMap((k) => META_SEGMENTS[k]());
+          const scan = [0xff, 0xda, ...be16(4), 0x00, 0x00, ...scanBytes];
+          const bytes = [...be16(0xffd8), ...segments, ...scan, ...be16(0xffd9)];
+          const buffer = new Uint8Array(bytes).buffer;
+
+          expect(parseMetadata(buffer).hasMetadata).toBe(true);
+
+          const { buffer: clean, removed } = stripMetadata(buffer);
+          expect(removed).toBe(kinds.length);
+          // No metadata survives the wipe.
+          expect(parseMetadata(clean).hasMetadata).toBe(false);
+          // The scan payload + EOI are preserved byte-for-byte.
+          const out = new Uint8Array(clean);
+          const tail = Array.from(out.slice(out.length - (scanBytes.length + 2)));
+          expect(tail).toEqual([...scanBytes, 0xff, 0xd9]);
+        },
+      ),
     );
   });
 });
