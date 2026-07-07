@@ -21,6 +21,16 @@ describe('dmsToDecimal', () => {
     expect(dmsToDecimal([[1, 1]], 'N')).toBeNull();
     expect(dmsToDecimal(null, 'N')).toBeNull();
   });
+
+  it('treats a zero-denominator rational as zero instead of NaN', () => {
+    // A [n, 0] rational would divide by zero; ratio() must coerce it to 0.
+    const dd = dmsToDecimal([[10, 1], [30, 0], [0, 1]], 'N');
+    expect(dd).toBe(10);
+  });
+
+  it('accepts bare numbers as degree/minute/second components', () => {
+    expect(dmsToDecimal([1, 30, 0], 'N')).toBeCloseTo(1.5, 6);
+  });
 });
 
 describe('extractCoordinates', () => {
@@ -59,5 +69,10 @@ describe('extractCoordinates', () => {
 describe('formatCoord', () => {
   it('fixes to six decimals by default', () => {
     expect(formatCoord(37.80833333)).toBe('37.808333');
+  });
+
+  it('returns an empty string for a null value', () => {
+    expect(formatCoord(null)).toBe('');
+    expect(formatCoord(undefined)).toBe('');
   });
 });
