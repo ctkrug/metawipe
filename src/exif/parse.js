@@ -60,22 +60,43 @@ export function parseMetadata(buffer) {
   const result = { isJpeg: isJpeg(view), fields: [], coordinates: null, hasMetadata: false, sensitiveCount: 0 };
   if (!result.isJpeg) return result;
 
-  const exifSeg = walkSegments(view).find((s) => s.kind === 'exif');
-  if (!exifSeg) return result;
-
-  // EXIF payload = "Exif\0\0" (6 bytes) then the TIFF stream.
-  const tiffBase = exifSeg.headerEnd + 6;
-  const header = readTiffHeader(view, tiffBase);
-  if (!header) return result;
-
-  const { reader, base, firstIFD } = header;
-  const ifd0 = readIFD(reader, base, base + firstIFD);
-  const ifd0Named = nameEntries(ifd0, TIFF_TAGS);
-
   const push = (ifdLabel, list) => {
     for (const e of list) result.fields.push({ ifd: ifdLabel, ...e });
   };
-  push('IFD0', ifd0Named.list);
+
+  // Walk the marker segments once; every metadata kind is decoded from here so
+  // the report never under-counts what `strip` will later remove.
+  const segments = walkSegments(view);
+
+  const exifSeg = segments.find((s) => s.kind === 'exif');
+  if (exifSeg) parseExif(view, exifSeg, push, result);
+
+  // XMP / IPTC aren't field-decoded (that's beyond v1), but their presence is
+  // real leaked metadata — surface each as a flagged block so the counter and
+  // the panel stay honest and consistent with the stripper.
+  for (const seg of segments) {
+    if (seg.kind === 'xmp') {
+      push('XMP', [xmpField(seg)]);
+    } else if (seg.kind === 'iptc') {
+      push('IPTC', [iptcField(seg)]);
+    }
+  }
+
+  result.hasMetadata = result.fields.length > 0;
+  result.sensitiveCount = result.fields.filter((f) => f.sensitive).length;
+  return result;
+}
+
+/** Decode the EXIF TIFF stream in an APP1 segment into named fields. */
+function parseExif(view, exifSeg, push, result) {
+  // EXIF payload = "Exif\0\0" (6 bytes) then the TIFF stream.
+  const tiffBase = exifSeg.headerEnd + 6;
+  const header = readTiffHeader(view, tiffBase);
+  if (!header) return;
+
+  const { reader, base, firstIFD } = header;
+  const ifd0 = readIFD(reader, base, base + firstIFD);
+  push('IFD0', nameEntries(ifd0, TIFF_TAGS).list);
 
   // EXIF sub-IFD.
   const exifPtr = ifd0[0x8769];
@@ -92,8 +113,19 @@ export function parseMetadata(buffer) {
     push('GPS', gpsNamed.list);
     result.coordinates = extractCoordinates(gpsNamed.named);
   }
-
-  result.hasMetadata = result.fields.length > 0;
-  result.sensitiveCount = result.fields.filter((f) => f.sensitive).length;
-  return result;
 }
+
+/** A synthetic field describing a detected metadata block by its size. */
+function blockField(name, seg) {
+  const bytes = Math.max(0, seg.length - 2); // segment length minus its size field
+  return {
+    tag: null,
+    name,
+    value: bytes,
+    display: `present · ${bytes} bytes`,
+    sensitive: true, // XMP/IPTC routinely carry author, location and rights
+  };
+}
+
+const xmpField = (seg) => blockField('XMPPacket', seg);
+const iptcField = (seg) => blockField('IPTCBlock', seg);
