@@ -80,6 +80,25 @@ describe('renderPanel', () => {
     expect(dl.getAttribute('download')).toBe('photo-clean.jpg');
   });
 
+  it('renders an em-dash for a field with no display value', () => {
+    const meta = {
+      fields: [{ ifd: 'IFD0', name: 'Make', display: '', sensitive: false }],
+      sensitiveCount: 0,
+      coordinates: null,
+    };
+    renderPanel(host, meta, {});
+    expect(host.querySelector('.field-row__value').textContent).toBe('—');
+  });
+
+  it('falls back to a default download name when none is given', () => {
+    renderPanel(host, parseMetadata(jpegBare()), {
+      result: '✓ Wiped 1 segment.',
+      cleanUrl: 'blob:fake',
+      onReset: () => {},
+    });
+    expect(host.querySelector('a[download]').getAttribute('download')).toBe('clean.jpg');
+  });
+
   it('offers a reset control whenever onReset is provided', () => {
     const meta = parseMetadata(jpegWithExif());
     let reset = false;
