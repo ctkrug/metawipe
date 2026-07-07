@@ -3,11 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Metawipe — see what your photos leak, then wipe it</title>
+    <title>Metawipe: see what your photo leaks, then wipe it</title>
     <meta
       name="description"
-      content="Drop a photo in and see every EXIF, GPS and device field it's leaking. Strip it with one click — nothing ever leaves your browser."
+      content="Drop a photo in and see every EXIF, GPS and device field it is leaking, then strip it with one click. Nothing ever leaves your browser."
     />
+    <meta property="og:title" content="Metawipe: see what your photo leaks, then wipe it" />
+    <meta
+      property="og:description"
+      content="See every EXIF, GPS and device field a photo is carrying, then strip it in one click. Entirely in your browser, nothing uploads."
+    />
+    <meta property="og:type" content="website" />
 
     <!-- Favicon: cyan crosshair reticle on ink-navy, generated in code. -->
     <link
@@ -43,7 +49,7 @@
       <!-- The light-table (hero) + the leak panel are injected by main.js -->
     </main>
 
-    <!-- How it works — the landing explainer. Same tokens as the tool above;
+    <!-- How it works: the landing explainer. Same tokens as the tool above;
          product and page are one brand. -->
     <section class="explainer" aria-labelledby="how-heading">
       <h2 id="how-heading" class="explainer__title">Three steps. Zero uploads.</h2>
@@ -53,7 +59,7 @@
           <h3 class="step__head">Drop a photo</h3>
           <p>
             Drag a JPEG onto the light-table, or browse for one. It's read with
-            <code>FileReader</code> — the bytes never leave this tab. Pull your
+            <code>FileReader</code> and the bytes never leave this tab. Pull your
             network cable; it still works.
           </p>
         </li>
@@ -63,8 +69,8 @@
           <p>
             A from-scratch EXIF/TIFF/GPS parser surfaces every hidden field,
             pinned on the image. Location and identity leaks glow
-            <span class="hl-warn">amber</span> — including a map link to the exact
-            spot your photo pins.
+            <span class="hl-warn">amber</span>, with a map link straight to the
+            exact spot your photo pins.
           </p>
         </li>
         <li class="step">
@@ -72,24 +78,85 @@
           <h3 class="step__head">Wipe it, losslessly</h3>
           <p>
             One click drops the metadata segments and hands back a clean JPEG.
-            The compressed pixels are copied byte-for-byte — no re-encode, no
-            quality loss, just the photo minus its dossier.
+            The compressed pixels are copied byte-for-byte, so there is no
+            re-encode and no quality loss, just the photo minus its dossier.
           </p>
         </li>
       </ol>
       <p class="promise">
         Every "remove EXIF online" site asks you to <em>upload</em> the exact
         coordinates you're trying to hide. Metawipe never does. Parsing and
-        stripping happen entirely on your device — open the network tab and
-        watch it stay silent.
+        stripping happen entirely on your device. Open the network tab and watch
+        it stay silent.
       </p>
+    </section>
+
+    <!-- Search-intent copy: the questions people actually type before they
+         trust a metadata tool. Same tokens as everything above. -->
+    <section class="faq" aria-labelledby="faq-heading">
+      <h2 id="faq-heading" class="faq__title">Common questions</h2>
+
+      <div class="faq__item">
+        <h3>What metadata does Metawipe remove from a photo?</h3>
+        <p>
+          It removes the EXIF block (camera make and model, lens, exposure
+          settings, and the original date and time), the GPS block (latitude,
+          longitude, altitude and GPS timestamp), and the XMP and IPTC records
+          that carry author, copyright and editing history. In JPEG terms it
+          drops every metadata application segment while leaving the compressed
+          image untouched.
+        </p>
+      </div>
+
+      <div class="faq__item">
+        <h3>Does my photo get uploaded anywhere?</h3>
+        <p>
+          No. The file is read with the browser's <code>FileReader</code> API and
+          every byte stays in the tab. There is no server, no analytics and no
+          background request. You can disconnect from the internet, drop a photo,
+          inspect it and download the cleaned copy with the network still off.
+        </p>
+      </div>
+
+      <div class="faq__item">
+        <h3>Will stripping metadata reduce my image quality?</h3>
+        <p>
+          No. Metawipe does not re-encode the picture. It copies the compressed
+          scan data byte-for-byte and only skips the metadata segments, so the
+          cleaned JPEG is visually identical to the original. Re-opening the
+          cleaned file in Metawipe reports zero metadata fields.
+        </p>
+      </div>
+
+      <div class="faq__item">
+        <h3>Why should I strip EXIF and GPS data before sharing a photo?</h3>
+        <p>
+          A single photo can pin the spot it was taken to within a few meters and
+          name the exact device that took it. Posted to a marketplace listing, a
+          forum or a profile, that quietly hands strangers your home location and
+          a device fingerprint. Removing it keeps the picture and drops the trail.
+        </p>
+      </div>
+
+      <div class="faq__item">
+        <h3>What file types are supported?</h3>
+        <p>
+          Metawipe reads and cleans JPEG files, the format almost every phone and
+          camera saves by default. Drop a non-JPEG and it tells you instead of
+          failing silently. PNG, WebP and HEIC support are on the list for later.
+        </p>
+      </div>
     </section>
 
     <footer class="footer">
       <p>
         Metadata is parsed and stripped entirely on your device. Open the network
-        tab — you'll see zero requests.
-        <a href="https://github.com/ctkrug/metawipe" target="_blank" rel="noopener">Source</a>.
+        tab and you'll see zero requests.
+        <a href="https://github.com/ctkrug/metawipe" target="_blank" rel="noopener">View on GitHub</a>.
+      </p>
+      <p class="footer__more">
+        More by Charlie Krug →
+        <a href="https://apps.charliekrug.com" target="_blank" rel="noopener">apps.charliekrug.com</a>
       </p>
     </footer>
 
