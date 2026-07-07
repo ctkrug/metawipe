@@ -13,6 +13,7 @@ import {
   jpegBadSubIfdPointer,
   jpegWithAllMeta,
   jpegWithJfif,
+  jpegWithStandaloneMarker,
 } from './fixtures.js';
 
 describe('parseMetadata', () => {
@@ -90,6 +91,12 @@ describe('parseMetadata', () => {
     expect(ifds.has('IPTC')).toBe(true);
     expect(meta.coordinates).not.toBeNull();
     expect(meta.sensitiveCount).toBeGreaterThan(1);
+  });
+
+  it('skips a standalone marker and still finds the EXIF segment', () => {
+    const meta = parseMetadata(jpegWithStandaloneMarker());
+    expect(meta.fields.find((f) => f.name === 'Make').display).toBe('TestCam');
+    expect(meta.coordinates).not.toBeNull();
   });
 
   it('surfaces a lone JFIF APP0 header as an unflagged block', () => {

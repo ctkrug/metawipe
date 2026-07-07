@@ -240,6 +240,23 @@ export function jpegWithJfif() {
   return new Uint8Array(bytes).buffer;
 }
 
+/**
+ * A JPEG with a standalone marker (TEM, 0xFF01 — no length payload) sitting
+ * before the EXIF segment. The walker must skip it and still find the metadata.
+ */
+export function jpegWithStandaloneMarker() {
+  const tiff = buildExifTiff(false);
+  const payload = [...ascii('Exif\0\0'), ...tiff];
+  const bytes = [
+    ...u16(0xffd8),
+    0xff, 0x01, // TEM — standalone, carries no length
+    0xff, 0xe1, ...u16(payload.length + 2), ...payload,
+    0xff, 0xda, ...u16(4), 0x00, 0x00, 0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
 /** Non-JPEG bytes (a fake PNG header). */
 export function notJpeg() {
   return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
