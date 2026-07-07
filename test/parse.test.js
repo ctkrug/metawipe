@@ -11,6 +11,8 @@ import {
   jpegAppMarkerAtEof,
   jpegExifNoTiff,
   jpegBadSubIfdPointer,
+  jpegWithAllMeta,
+  jpegWithJfif,
 } from './fixtures.js';
 
 describe('parseMetadata', () => {
@@ -77,6 +79,26 @@ describe('parseMetadata', () => {
     const meta = parseMetadata(jpegWithIptc());
     expect(meta.hasMetadata).toBe(true);
     expect(meta.fields.find((f) => f.ifd === 'IPTC')).toBeTruthy();
+  });
+
+  it('surfaces EXIF, GPS, XMP and IPTC together from one photo', () => {
+    const meta = parseMetadata(jpegWithAllMeta());
+    const ifds = new Set(meta.fields.map((f) => f.ifd));
+    expect(ifds.has('IFD0')).toBe(true);
+    expect(ifds.has('GPS')).toBe(true);
+    expect(ifds.has('XMP')).toBe(true);
+    expect(ifds.has('IPTC')).toBe(true);
+    expect(meta.coordinates).not.toBeNull();
+    expect(meta.sensitiveCount).toBeGreaterThan(1);
+  });
+
+  it('surfaces a lone JFIF APP0 header as an unflagged block', () => {
+    const meta = parseMetadata(jpegWithJfif());
+    expect(meta.hasMetadata).toBe(true);
+    const app = meta.fields.find((f) => f.ifd === 'APPn');
+    expect(app.name).toBe('APP0 segment');
+    expect(app.sensitive).toBe(false);
+    expect(meta.sensitiveCount).toBe(0);
   });
 
   it('does not throw on a truncated JPEG and reports no coordinates', () => {

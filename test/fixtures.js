@@ -208,6 +208,38 @@ export function jpegBare() {
   return new Uint8Array(bytes).buffer;
 }
 
+/**
+ * A JPEG carrying EXIF, XMP and IPTC all at once — the real multi-segment case
+ * a phone photo edited in an app produces. Exercises the whole segment loop.
+ */
+export function jpegWithAllMeta() {
+  const exif = [...ascii('Exif\0\0'), ...buildExifTiff(false)];
+  const xmp = ascii('http://ns.adobe.com/xap/1.0/\0<x:xmpmeta photoshop:City="Oslo"/>');
+  const iptc = ascii('Photoshop 3.0\0creator: R. Eporter');
+  const bytes = [
+    ...u16(0xffd8),
+    ...appSegment(0xe1, exif),
+    ...appSegment(0xe1, xmp),
+    ...appSegment(0xed, iptc),
+    0xff, 0xda, ...u16(4), 0x00, 0x00, 0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
+/** A JPEG whose only metadata is a JFIF APP0 header (the common non-camera case). */
+export function jpegWithJfif() {
+  // JFIF: "JFIF\0", version 1.01, aspect units + density, no thumbnail.
+  const jfif = [...ascii('JFIF\0'), 0x01, 0x01, 0x00, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00];
+  const bytes = [
+    ...u16(0xffd8),
+    ...appSegment(0xe0, jfif),
+    0xff, 0xda, ...u16(4), 0x00, 0x00, 0x11, 0x22, 0x33,
+    ...u16(0xffd9),
+  ];
+  return new Uint8Array(bytes).buffer;
+}
+
 /** Non-JPEG bytes (a fake PNG header). */
 export function notJpeg() {
   return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
