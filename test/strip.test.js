@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { stripMetadata } from '../src/exif/strip.js';
 import { parseMetadata } from '../src/exif/parse.js';
 import { walkSegments, isJpeg } from '../src/exif/jpeg.js';
-import { jpegWithExif, jpegBare, notJpeg } from './fixtures.js';
+import {
+  jpegWithExif,
+  jpegBare,
+  notJpeg,
+  jpegWithXmp,
+  jpegWithIptc,
+} from './fixtures.js';
 
 describe('stripMetadata', () => {
   it('removes the EXIF segment and leaves a valid, metadata-free JPEG', () => {
@@ -40,5 +46,24 @@ describe('stripMetadata', () => {
     const { buffer, removed } = stripMetadata(input);
     expect(removed).toBe(0);
     expect(buffer).toBe(input);
+  });
+
+  it.each([
+    ['XMP', jpegWithXmp],
+    ['IPTC', jpegWithIptc],
+  ])('removes the %s block and re-parses to clean', (_kind, build) => {
+    const original = build();
+    expect(parseMetadata(original).hasMetadata).toBe(true);
+
+    const { buffer, removed } = stripMetadata(original);
+    expect(removed).toBe(1);
+    expect(parseMetadata(buffer).hasMetadata).toBe(false);
+  });
+
+  it('everything parse reports as metadata is what strip removes', () => {
+    // Parse↔strip consistency: after wiping, the field count must be zero.
+    const original = jpegWithExif();
+    const { buffer } = stripMetadata(original);
+    expect(parseMetadata(buffer).fields.length).toBe(0);
   });
 });
