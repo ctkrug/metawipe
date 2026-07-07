@@ -212,3 +212,25 @@ export function jpegBare() {
 export function notJpeg() {
   return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
 }
+
+/**
+ * A JPEG whose APP1 segment header (marker + length) sits right at the end of
+ * the buffer, with no room for the signature bytes the walker tries to match.
+ * A naive matcher reads past the buffer end and throws.
+ */
+export function jpegAppMarkerAtEof() {
+  // SOI, then APP1 marker with a declared length but the file ends immediately.
+  const bytes = [...u16(0xffd8), 0xff, 0xe1, ...u16(0x0040)];
+  return new Uint8Array(bytes).buffer;
+}
+
+/**
+ * A JPEG carrying a valid "Exif\0\0" signature but truncated before the TIFF
+ * header that must follow it — the EXIF parser must not read past the end.
+ */
+export function jpegExifNoTiff() {
+  const payload = ascii('Exif\0\0'); // signature, then nothing
+  const segLen = payload.length + 2;
+  const bytes = [...u16(0xffd8), 0xff, 0xe1, ...u16(segLen), ...payload];
+  return new Uint8Array(bytes).buffer;
+}

@@ -8,6 +8,8 @@ import {
   jpegWithIptc,
   jpegTruncated,
   jpegWithForeignApp1,
+  jpegAppMarkerAtEof,
+  jpegExifNoTiff,
 } from './fixtures.js';
 
 describe('parseMetadata', () => {
@@ -80,6 +82,24 @@ describe('parseMetadata', () => {
     let meta;
     expect(() => {
       meta = parseMetadata(jpegTruncated());
+    }).not.toThrow();
+    expect(meta.isJpeg).toBe(true);
+    expect(meta.coordinates).toBeNull();
+  });
+
+  it('does not throw when an APP marker sits at the very end of the file', () => {
+    let meta;
+    expect(() => {
+      meta = parseMetadata(jpegAppMarkerAtEof());
+    }).not.toThrow();
+    expect(meta.isJpeg).toBe(true);
+    expect(meta.hasMetadata).toBe(false);
+  });
+
+  it('does not throw when EXIF is truncated before its TIFF header', () => {
+    let meta;
+    expect(() => {
+      meta = parseMetadata(jpegExifNoTiff());
     }).not.toThrow();
     expect(meta.isJpeg).toBe(true);
     expect(meta.coordinates).toBeNull();
