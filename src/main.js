@@ -42,8 +42,19 @@ async function handleFile(file) {
   }
 
   currentName = file.name || 'photo.jpg';
-  const buffer = await readBuffer(file);
-  const meta = parseMetadata(buffer);
+
+  // The parser is defensive, but reading the file or an unforeseen malformation
+  // must never leave a blank screen or a bare console stack — degrade to a
+  // designed error state instead.
+  let buffer;
+  let meta;
+  try {
+    buffer = await readBuffer(file);
+    meta = parseMetadata(buffer);
+  } catch {
+    showError('That file couldn’t be read — it may be truncated or corrupt. Try another photo.');
+    return;
+  }
 
   revoke(currentUrl);
   revoke(cleanUrl);
