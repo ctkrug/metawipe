@@ -27,11 +27,17 @@ function fieldRow(f) {
 }
 
 function geoBlock(coords) {
-  const { lat, lng } = coords;
+  const { lat, lng, altitude } = coords;
   const osm = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
+  const alt =
+    altitude != null && Number.isFinite(altitude)
+      ? el('span', { class: 'geo__alt', text: `  ·  ${altitude.toFixed(1)} m` })
+      : null;
   return el('div', { class: 'geo' }, [
     el('span', { class: 'geo__label', text: '⚑ This photo pins a location' }),
-    el('span', { text: `${formatCoord(lat)}, ${formatCoord(lng)}  ` }),
+    el('span', { text: `${formatCoord(lat)}, ${formatCoord(lng)}` }),
+    alt,
+    el('br'),
     el('a', { href: osm, target: '_blank', rel: 'noopener', text: 'view on map ↗' }),
   ]);
 }
