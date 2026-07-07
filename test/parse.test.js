@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { parseMetadata, formatValue } from '../src/exif/parse.js';
-import { jpegWithExif, jpegBare, notJpeg } from './fixtures.js';
+import {
+  jpegWithExif,
+  jpegBare,
+  notJpeg,
+  jpegWithXmp,
+  jpegWithIptc,
+  jpegTruncated,
+  jpegWithForeignApp1,
+} from './fixtures.js';
 
 describe('parseMetadata', () => {
   it('detects a JPEG and reads IFD0 camera fields', () => {
@@ -50,6 +58,37 @@ describe('parseMetadata', () => {
     const meta = parseMetadata(notJpeg());
     expect(meta.isJpeg).toBe(false);
     expect(meta.fields).toEqual([]);
+  });
+
+  it('surfaces an XMP-only JPEG as flagged metadata, not "clean"', () => {
+    const meta = parseMetadata(jpegWithXmp());
+    expect(meta.hasMetadata).toBe(true);
+    const xmp = meta.fields.find((f) => f.ifd === 'XMP');
+    expect(xmp).toBeTruthy();
+    expect(xmp.sensitive).toBe(true);
+    expect(xmp.display).toMatch(/bytes/);
+    expect(meta.sensitiveCount).toBeGreaterThan(0);
+  });
+
+  it('surfaces an IPTC-only JPEG as flagged metadata', () => {
+    const meta = parseMetadata(jpegWithIptc());
+    expect(meta.hasMetadata).toBe(true);
+    expect(meta.fields.find((f) => f.ifd === 'IPTC')).toBeTruthy();
+  });
+
+  it('does not throw on a truncated JPEG and reports no coordinates', () => {
+    let meta;
+    expect(() => {
+      meta = parseMetadata(jpegTruncated());
+    }).not.toThrow();
+    expect(meta.isJpeg).toBe(true);
+    expect(meta.coordinates).toBeNull();
+  });
+
+  it('ignores a non-EXIF APP1 segment without surfacing bogus fields', () => {
+    const meta = parseMetadata(jpegWithForeignApp1());
+    expect(meta.isJpeg).toBe(true);
+    expect(meta.hasMetadata).toBe(false);
   });
 });
 
