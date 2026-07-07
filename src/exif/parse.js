@@ -127,5 +127,5 @@ function blockField(name, seg) {
   };
 }
 
-const xmpField = (seg) => blockField('XMPPacket', seg);
-const iptcField = (seg) => blockField('IPTCBlock', seg);
+const xmpField = (seg) => blockField('XMP packet', seg);
+const iptcField = (seg) => blockField('IPTC record', seg);
