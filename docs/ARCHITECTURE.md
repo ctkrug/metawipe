@@ -8,14 +8,17 @@ browser. There is no server, no upload, no network call anywhere in `src/`.
 
 ```bash
 npm install
-npm run dev      # local dev server (Vite)
-npm run build    # -> dist/ (static, base-path-relative for a subpath)
-npm test         # Vitest: pure byte-level logic against synthetic fixtures
+npm run dev            # local dev server (Vite)
+npm run build          # -> dist/ (static, base-path-relative for a subpath)
+npm test               # Vitest: byte-level logic + DOM render/flow tests
+npm run test:coverage  # v8 line coverage over src/ (~99%)
 ```
 
-Tests run in a Node environment against synthetic JPEGs built in code
-(`test/fixtures.js`) — no binary assets, no DOM, no network — so CI stays fast
-and deterministic.
+Logic tests run in a Node environment against synthetic JPEGs built in code
+(`test/fixtures.js`) — no binary assets, no network. UI/flow tests use happy-dom
+(`@vitest-environment happy-dom` docblock) and drive real DOM nodes. `test/
+property.test.js` uses fast-check for property-based coverage of the coordinate
+math and the parse↔strip invariant.
 
 ## Data flow
 
@@ -47,13 +50,13 @@ File  ──▶ main.js (intake)
 
 | File | Responsibility |
 |------|----------------|
-| `src/main.js` | App entry: file intake (drag/drop + browse), orchestrates parse → render → wipe → download → reset. Owns object-URL lifecycle. |
+| `src/main.js` | `createApp(root)` factory: file intake (drag/drop + browse), orchestrates parse → render → wipe → download → reset. Owns the object-URL lifecycle and a monotonic load token so a stale async load can't clobber a newer one. Boots itself only when a real `#app` root exists. |
 | `src/exif/jpeg.js` | JPEG marker-segment walker. Classifies APPn segments (`exif`/`xmp`/`iptc`/`appn`) without decoding pixels. |
 | `src/exif/tiff.js` | TIFF container: 8-byte header, IFD walking, typed value resolution (ASCII/SHORT/LONG/RATIONAL/…). Guards malformed offsets. |
 | `src/exif/reader.js` | Endian-aware primitive reads over a `DataView` (little "II" / big "MM"). |
 | `src/exif/tags.js` | Curated TIFF/EXIF/GPS tag dictionaries + the sensitive-field set. |
 | `src/exif/gps.js` | DMS-rational → signed decimal degrees + display/format helpers. |
-| `src/exif/parse.js` | Orchestration: bytes in → labelled field list, coordinates, detected segments out. Pure (no DOM). |
+| `src/exif/parse.js` | Orchestration: bytes in → labelled field list, coordinates, detected segments out. Pure (no DOM). Surfaces EXIF/GPS fields plus XMP/IPTC and any foreign APPn block, so the report matches exactly what `strip` removes. |
 | `src/exif/strip.js` | Lossless rewrite: copy JPEG byte-for-byte, drop only metadata segments. Scan data stays bit-identical. |
 | `src/util/filename.js` | Pure `cleanFilename` helper for the `*-clean.jpg` download name. |
 | `src/ui/dom.js` | Tiny `el`/`mount` DOM builder — enough UI without a framework. |
@@ -70,5 +73,9 @@ File  ──▶ main.js (intake)
   verbatim (asserted byte-for-byte in `test/strip.test.js`).
 - **Endian-agnostic.** The TIFF reader honors the byte-order mark; both "II"
   and "MM" streams are covered by tests.
+- **Never throws on hostile input.** The parser degrades on malformed/truncated
+  JPEGs — signature matches and TIFF reads are bounds-checked, segment lengths
+  are clamped to the buffer, and sub-IFD pointers must be scalar positive LONGs.
+  `test/parse.test.js` and `test/property.test.js` pin this.
 </content>
 </invoke>
